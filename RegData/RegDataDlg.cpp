@@ -6,7 +6,8 @@
 #include "RegData.h"
 #include "RegDataDlg.h"
 #include "afxdialogex.h"
-
+#include "string.h"
+#include<atlconv.h>
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -119,6 +120,66 @@ HCURSOR CRegDataDlg::OnQueryDragIcon()
 void CRegDataDlg::OnClickedQuery()
 {
 	// TODO: Add your control notification handler code here
+	//--------------------------------查询系统版本信息---------------------------------------------
+	HKEY hKEY;	//handler
+	LPCTSTR banner_Set = _T("Software\\Microsoft\\Windows NT\\CurrentVersion"); //子健目录
+	long retopen = (::RegOpenKeyEx(HKEY_LOCAL_MACHINE,banner_Set,0,KEY_READ,&hKEY));	//访问系统版本注册表
+	if(retopen!=ERROR_SUCCESS)
+	{
+		MessageBox(_T("ERROR:Can not open the hKEY!"));
+		return;
+	}
+	
+	//查询ProductName
+	DWORD cdData=80;	//预设置的数据长度
+	LPDWORD lp=&cdData;
+	LPBYTE ProductName_Get = new BYTE[80];	//保存查询的数据
+	long ret = RegGetValue(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows NT\\CurrentVersion"),_T("ProductName"), RRF_RT_REG_SZ, NULL, ProductName_Get, lp);//注册表查询，将结果保存在ProductName_Get中
+	//将unicode转换为ASCII
+	char ProductName_Get_Buf[100];
+	DWORD dBufSize = 80;
+	WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)ProductName_Get, -1, ProductName_Get_Buf, dBufSize, NULL, FALSE);//转换后的结果保存在ProductName_Get_Buf中
+	m_ProductName = CString(ProductName_Get_Buf);//显示在界面上
+
+	//查询RegisteredOwner
+	LPBYTE RegisteredOwner_Get = new BYTE[80];
+	DWORD type_2 = REG_SZ;
+	DWORD cdData_2 = 80;
+	long ret2 = ::RegQueryValueEx(hKEY,_T("RegisteredOwner"),NULL,&type_2,RegisteredOwner_Get,&cdData_2);
+	if(ret2!=ERROR_SUCCESS)
+	{
+		MessageBox(_T("Can not query the Reg"));
+		return;
+	}
+	char dBuf2[100];
+	DWORD dBufSize2 = 80;
+	WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)RegisteredOwner_Get, -1, dBuf2, dBufSize2, NULL, FALSE);
+	m_RegisteredOwner = CString(dBuf2);
+
+	//查询SystemRoot
+	LPBYTE SystemRoot_Get = new BYTE[80];
+	DWORD type_3 = REG_SZ;
+	DWORD cdData_3 = 80;
+	long ret3 = ::RegQueryValueEx(hKEY,_T("SystemRoot"),NULL,&type_3,SystemRoot_Get,&cdData_3);
+	if(ret3!=ERROR_SUCCESS)
+	{
+		MessageBox(_T("Can not query the Reg"));
+		return;
+	}
+	char dBuf3[100];
+	DWORD dBufSize3 = 80;
+	WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)SystemRoot_Get, -1, dBuf3, dBufSize3, NULL, FALSE);
+	m_SystemRoot = CString(dBuf3);
+
+	UpdateData(false);	//将值赋给控件
+
+	//delete[] ProductName_Get;
+	delete[] RegisteredOwner_Get;
+	delete[] SystemRoot_Get;
+	::RegCloseKey(hKEY);
+
+
+
 }
 
 
