@@ -173,7 +173,7 @@ void CRegDataDlg::OnClickedQuery()
 
 	UpdateData(false);	//将值赋给控件
 
-	//delete[] ProductName_Get;
+	delete[] ProductName_Get;
 	delete[] RegisteredOwner_Get;
 	delete[] SystemRoot_Get;
 	::RegCloseKey(hKEY);
